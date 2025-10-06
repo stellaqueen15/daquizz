@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 
 // Définir le type User
@@ -17,8 +17,25 @@ type UserContextType = {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // Provider pour englober ton app
+/*
+Quand le Provider est monté, il regarde si le localStorage contient déjà un user.
+Si oui, le user devient le currentUse
+Si non, ça reste null
+*/
 export const UserProvider = ({ children }: { children: ReactNode }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const storedUser = localStorage.getItem("currentUser");
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+
+  // Mets à jour le localstorage quand le user change
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem("currentUser", JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem("currentUser");
+    }
+  }, [currentUser]);
 
   return (
     <UserContext.Provider value={{ currentUser, setCurrentUser }}>

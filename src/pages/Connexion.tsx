@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
@@ -60,6 +60,12 @@ export default function Connexion() {
       navigate("/");
     }
   };
+
+  useEffect(() => {
+    if (currentUser) {
+      navigate("/");
+    }
+  }, [currentUser, navigate]);
 
   return (
     <>

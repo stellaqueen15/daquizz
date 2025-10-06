@@ -22,7 +22,10 @@ export default function Navbar() {
       {(() => {
         if (currentUser)
           return (
-            <button className="bg-gradient-to-br from-yellow-300 to-orange-400  p-2 rounded-xl shadow-sm cursor-pointer">
+            <button
+              className="bg-gradient-to-br from-yellow-300 to-orange-400  p-2 rounded-xl shadow-sm cursor-pointer"
+              onClick={() => navigate("/profile")}
+            >
               {currentUser.username}
             </button>
           );

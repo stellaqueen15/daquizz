@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import QuizClassique from "./pages/ClassicQuizz";
 import Leadboard from "./pages/Leadboard";
 import Connexion from "./pages/Connexion";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Route path="/quiz-classique" element={<QuizClassique />} />
           <Route path="/classement" element={<Leadboard />} />
           <Route path="/connexion" element={<Connexion />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </BrowserRouter>
     </UserProvider>
