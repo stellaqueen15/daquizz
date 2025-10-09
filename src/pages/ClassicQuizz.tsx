@@ -80,11 +80,8 @@ export default function ClassicQuiz() {
 
       if (answers[i].is_correct == true) {
         setGoodAnswer(true);
-        console.log(goodAnswer);
-        console.log("Tu as la bonne réponse!");
       } else {
         setGameOver(true);
-        console.log("MAUVAISE RÉPONSE");
       }
     }
   };
