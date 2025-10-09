@@ -1,16 +1,30 @@
-import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import { useEffect, useState } from "react";
+import { supabase } from "../../supabaseClient";
 
 export default function Leaderboard() {
-  const navigate = useNavigate();
+  const [leaderboard, setLeaderboard] = useState<
+    { username: string; score: number }[]
+  >([]);
 
-  // Données mockées pour le classement global
-  const scores = [
-    { username: "Alice", score: 12 },
-    { username: "Bob", score: 10 },
-    { username: "Charlie", score: 8 },
-    { username: "Dora", score: 6 },
-  ];
+  useEffect(() => {
+    const fetchLeadboard = async () => {
+      const { data, error } = await supabase
+        .from("users")
+        .select("username, score")
+        .order("score", { ascending: false });
+
+      if (error) {
+        console.error("Erreur fetch answers:", error);
+      }
+
+      if (data) {
+        setLeaderboard(data);
+      }
+    };
+
+    fetchLeadboard();
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col items-center px-4 pt-32">
@@ -33,7 +47,7 @@ export default function Leaderboard() {
             </tr>
           </thead>
           <tbody>
-            {scores.map((player, index) => (
+            {leaderboard.map((player, index) => (
               <tr
                 key={index}
                 className={`${

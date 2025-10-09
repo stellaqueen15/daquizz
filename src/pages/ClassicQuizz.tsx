@@ -1,7 +1,7 @@
-import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import { supabase } from "../../supabaseClient";
+import { useUser } from "../context/UserContext";
 
 type Question = {
   id: number;
@@ -18,10 +18,12 @@ type Answer = {
 };
 
 export default function ClassicQuiz() {
-  const navigate = useNavigate();
+  const { currentUser } = useUser();
   const [question, setQuestion] = useState<Question>();
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [goodAnswer, setGoodAnswer] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(20);
 
   useEffect(() => {
     const fetchQuestion = async () => {
@@ -40,6 +42,8 @@ export default function ClassicQuiz() {
 
     fetchQuestion();
     setGoodAnswer(false);
+    setGameOver(false);
+    setTimeLeft(20);
   }, [goodAnswer]);
 
   useEffect(() => {
@@ -62,15 +66,41 @@ export default function ClassicQuiz() {
     fetchAnswers();
   }, [question]); // on affiche les réponses en fonction de la question qui est affiché
 
-  const handleAnswer = (i: number) => {
-    if (answers[i].is_correct == true) {
-      setGoodAnswer(true);
-      console.log(goodAnswer);
-      console.log("Tu as la bonne réponse!");
-    } else {
-      console.log("MAUVAISE RÉPONSE");
+  const handleAnswer = async (i: number) => {
+    if (currentUser) {
+      const { error } = await supabase.rpc("increment_score", {
+        user_id: currentUser?.id,
+        xp: answers[i].xp,
+      });
+
+      if (error) {
+        console.error("Erreur update score:", error);
+        return;
+      }
+
+      if (answers[i].is_correct == true) {
+        setGoodAnswer(true);
+        console.log(goodAnswer);
+        console.log("Tu as la bonne réponse!");
+      } else {
+        setGameOver(true);
+        console.log("MAUVAISE RÉPONSE");
+      }
     }
   };
+
+  useEffect(() => {
+    if (timeLeft <= 0 || gameOver == true) {
+      setGameOver(true);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer); // On oublie pas de nettoyer à la fin !
+  }, [timeLeft, gameOver]);
 
   return (
     <>
@@ -79,6 +109,28 @@ export default function ClassicQuiz() {
         <h1 className="text-4xl md:text-5xl font-bold mb-8 text-white drop-shadow-lg">
           Quiz Classique
         </h1>
+
+        <div className="flex items-center justify-center mb-6">
+          <div className="bg-white shadow-md rounded-xl px-4 py-2 flex items-center space-x-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-5 h-5 text-blue-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <p className="text-lg font-semibold text-gray-800">
+              Temps restant : <span className="text-blue-500">{timeLeft}s</span>
+            </p>
+          </div>
+        </div>
 
         {/* Question */}
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-xl w-full mb-6">
@@ -92,6 +144,7 @@ export default function ClassicQuiz() {
               <button
                 onClick={() => handleAnswer(index)}
                 key={index}
+                disabled={gameOver}
                 className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-semibold cursor-pointer px-6 py-3 rounded-xl shadow-md transition transform hover:scale-105"
               >
                 {answer.answer_text}

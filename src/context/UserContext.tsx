@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 type User = {
   id: string;
   username: string;
+  score: number;
 };
 
 // Définir le type du contexte

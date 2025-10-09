@@ -8,6 +8,7 @@ import { PostgrestError } from "@supabase/supabase-js";
 type User = {
   id: string;
   username: string;
+  score: number;
 };
 
 export default function Connexion() {
