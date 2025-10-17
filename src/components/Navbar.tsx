@@ -26,7 +26,7 @@ export default function Navbar() {
               className="bg-gradient-to-br from-yellow-300 to-orange-400  p-2 rounded-xl shadow-sm cursor-pointer"
               onClick={() => navigate("/profile")}
             >
-              {currentUser.username}
+              {currentUser.pseudo}
             </button>
           );
         return (

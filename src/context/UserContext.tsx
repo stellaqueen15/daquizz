@@ -1,14 +1,13 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "../../supabaseClient";
 import type { ReactNode } from "react";
 
-// Définir le type User
 type User = {
   id: string;
-  username: string;
+  pseudo: string;
   score: number;
 };
 
-// Définir le type du contexte
 type UserContextType = {
   currentUser: User | null;
   setCurrentUser: (user: User | null) => void;
@@ -18,25 +17,64 @@ type UserContextType = {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // Provider pour englober ton app
-/*
-Quand le Provider est monté, il regarde si le localStorage contient déjà un user.
-Si oui, le user devient le currentUse
-Si non, ça reste null
-*/
 export const UserProvider = ({ children }: { children: ReactNode }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    const storedUser = localStorage.getItem("currentUser");
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  // Mets à jour le localstorage quand le user change
   useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem("currentUser", JSON.stringify(currentUser));
-    } else {
-      localStorage.removeItem("currentUser");
-    }
-  }, [currentUser]);
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data.user) {
+        const { data: profileData } = await supabase
+          .from("users")
+          .select("pseudo, score")
+          .eq("id", data.user.id)
+          .single();
+
+        if (profileData) {
+          setCurrentUser({
+            id: data.user.id,
+            pseudo: profileData.pseudo,
+            score: profileData.score,
+          });
+        }
+      }
+    };
+
+    getUser();
+
+    // Pour écouter les changements de session (login/logout)
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (session?.user) {
+          const { data: profileData, error: profileError } = await supabase
+            .from("users")
+            .select("pseudo, score")
+            .eq("id", session.user.id)
+            .single();
+
+          if (!profileError && profileData) {
+            setCurrentUser({
+              id: session.user.id,
+              pseudo: profileData.pseudo,
+              score: profileData.score,
+            });
+          } else {
+            setCurrentUser({
+              id: session.user.id,
+              pseudo: session.user.user_metadata?.pseudo || "",
+              score: 0,
+            });
+          }
+        } else {
+          setCurrentUser(null);
+        }
+      }
+    );
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   return (
     <UserContext.Provider value={{ currentUser, setCurrentUser }}>
