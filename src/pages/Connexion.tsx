@@ -86,7 +86,7 @@ export default function Connexion() {
             onClick={handleConnexion}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold cursor-pointer py-3 rounded-xl transition-colors"
           >
-            S'inscrire
+            Se connecter
           </button>
           <p className="text-red-500 mt-3">{errorMsg}</p>
           <p className="text-center text-gray-400 text-sm mt-4">
